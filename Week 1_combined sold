@@ -1,0 +1,13 @@
+mport pandas as pd
+import glob
+import os
+
+os.chdir("/Users/erica/IDX_Exchange/csv")
+
+sold_files = sorted(glob.glob("CRMLSSold*.csv"))
+print("Sold files found:", len(sold_files))
+sold = pd.concat([pd.read_csv(f, low_memory=False) for f in sold_files], ignore_index=True)
+print(f"SOLD rows before filter: {len(sold):,}")
+sold = sold[sold["PropertyType"] == "Residential"]
+print(f"SOLD rows after filter: {len(sold):,}")
+sold.to_csv("combined_sold_residential.csv", index=False)
