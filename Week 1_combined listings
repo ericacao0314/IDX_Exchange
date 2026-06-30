@@ -1,0 +1,13 @@
+import pandas as pd
+import glob
+import os
+
+os.chdir("/Users/erica/IDX_Exchange/csv")
+
+listing_files = sorted(glob.glob("CRMLSListing*.csv"))
+print("Listing files found:", len(listing_files))
+listings = pd.concat([pd.read_csv(f, low_memory=False) for f in listing_files], ignore_index=True)
+print(f"LISTINGS rows before filter: {len(listings):,}")
+listings = listings[listings["PropertyType"] == "Residential"]
+print(f"LISTINGS rows after filter: {len(listings):,}")
+listings.to_csv("combined_listings_residential.csv", index=False)
