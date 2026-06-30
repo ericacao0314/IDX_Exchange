@@ -11,3 +11,6 @@ print(f"SOLD rows before filter: {len(sold):,}")
 sold = sold[sold["PropertyType"] == "Residential"]
 print(f"SOLD rows after filter: {len(sold):,}")
 sold.to_csv("combined_sold_residential.csv", index=False)
+
+## Sold rows before filter: 681599
+## Sold rows after filter: 458336
