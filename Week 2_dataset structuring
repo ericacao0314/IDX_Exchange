@@ -1,0 +1,42 @@
+import pandas as pd
+from pathlib import Path
+
+folder = Path(".")
+
+sold = pd.read_csv(folder / "combined_sold_residential.csv", low_memory=False)
+listings = pd.read_csv(folder / "combined_listings_residential.csv", low_memory=False)
+
+print("=" * 50)
+print("SOLD Dataset Structure")
+print(f"Rows: {len(sold):,}  |  Columns: {sold.shape[1]}")
+
+# Missing value report
+null_pct = (sold.isnull().sum() / len(sold) * 100).round(2)
+high_null = null_pct[null_pct > 90]
+print(f"\nColumns with >90% missing: {len(high_null)}")
+print(high_null.to_string())
+
+# Distribution summary for key numeric fields
+print("\nDistribution Summary:")
+print(sold[["ClosePrice", "LivingArea", "DaysOnMarket"]].describe(
+    percentiles=[0.25, 0.50, 0.75, 0.90]
+).to_string())
+
+# Key market questions
+print(f"\nMedian Close Price: ${sold['ClosePrice'].median():,.0f}")
+print(f"Mean Close Price: ${sold['ClosePrice'].mean():,.0f}")
+print(f"Median Days on Market: {sold['DaysOnMarket'].median():.0f}")
+
+above = (sold["ClosePrice"] > sold["ListPrice"]).sum()
+below = (sold["ClosePrice"] < sold["ListPrice"]).sum()
+total = sold[["ClosePrice", "ListPrice"]].dropna().shape[0]
+print(f"\nSold above list: {above/total*100:.1f}%")
+print(f"Sold below list: {below/total*100:.1f}%")
+
+print("\nTop 5 Counties by Median Close Price:")
+print(sold.groupby("CountyOrParish")["ClosePrice"].median()
+      .sort_values(ascending=False).head(5).to_string())
+
+# Save filtered dataset
+sold.to_csv(folder / "sold_residential_eda.csv", index=False)
+print("\nSaved: sold_residential_eda.csv")
