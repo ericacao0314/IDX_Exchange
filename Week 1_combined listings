@@ -11,3 +11,6 @@ print(f"LISTINGS rows before filter: {len(listings):,}")
 listings = listings[listings["PropertyType"] == "Residential"]
 print(f"LISTINGS rows after filter: {len(listings):,}")
 listings.to_csv("combined_listings_residential.csv", index=False)
+
+## Listing rows before filter: 860898
+## Listing rows after filter: 547162
