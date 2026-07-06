@@ -27,16 +27,16 @@ A 12-week data analytics pipeline focused on transforming raw real estate MLS tr
 - [x] Filtered both datasets to `PropertyType == 'Residential'` only.
 - [x] Documented row counts before and after concatenation and filtering.
 - [x] Saved aggregated files as analysis-ready CSVs.
-### 🔵 Weeks 2–3: Dataset Structuring, Validation & Mortgage Enrichment (In Progress)
+### 🔵 Weeks 2–3: Dataset Structuring, Validation & Mortgage Enrichment (FINISHED)
 - [x] Performed EDA to evaluate rows, columns, and data types.
 - [x] Identified columns with >90% missing values.
 - [x] Generated numeric distribution statistics (min, max, mean, median, percentiles) for `ClosePrice`, `LivingArea`, and `DaysOnMarket`.
 - [x] Answered key market questions: median/mean close price, Days on Market distribution, sold above vs. below list price, date consistency issues, and top counties by median price.
-- [ ] Fetch live 30-year fixed mortgage rates (`MORTGAGE30US`) from the St. Louis Federal Reserve (FRED).
-- [ ] Resample weekly FRED data into monthly averages.
-- [ ] Merge mortgage rates onto both combined datasets via a `year_month` key.
-- [ ] Validate zero null rate values after merge.
-- [ ] Save both enriched datasets as new CSVs.
+- [x] Fetch live 30-year fixed mortgage rates (`MORTGAGE30US`) from the St. Louis Federal Reserve (FRED).
+- [x] Resample weekly FRED data into monthly averages.
+- [x] Merge mortgage rates onto both combined datasets via a `year_month` key.
+- [x] Validate zero null rate values after merge.
+- [x] Save both enriched datasets as new CSVs.
 
 
 ## Key Milestone Metrics
@@ -65,5 +65,6 @@ A 12-week data analytics pipeline focused on transforming raw real estate MLS tr
 | Columns with >90% missing values | 10 columns  |
 | Min DaysOnMarket (data quality flag) | -288 days | 
 | Max LivingArea (data quality flag) | 17,021,321 sq ft | 
- 
+
+
 ---
