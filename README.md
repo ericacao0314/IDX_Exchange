@@ -27,7 +27,7 @@ A 12-week data analytics pipeline focused on transforming raw real estate MLS tr
 - [x] Filtered both datasets to `PropertyType == 'Residential'` only.
 - [x] Documented row counts before and after concatenation and filtering.
 - [x] Saved aggregated files as analysis-ready CSVs.
-### 🔵 Weeks 2–3: Dataset Structuring, Validation & Mortgage Enrichment (FINISHED)
+### ✅ Weeks 2–3: Dataset Structuring, Validation & Mortgage Enrichment (FINISHED)
 - [x] Performed EDA to evaluate rows, columns, and data types.
 - [x] Identified columns with >90% missing values.
 - [x] Generated numeric distribution statistics (min, max, mean, median, percentiles) for `ClosePrice`, `LivingArea`, and `DaysOnMarket`.
