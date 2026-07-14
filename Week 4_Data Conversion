@@ -1,0 +1,128 @@
+import pandas as pd
+from pathlib import Path
+ 
+folder = Path(".")
+ 
+DATE_COLUMNS = [
+    "CloseDate",
+    "PurchaseContractDate",
+    "ListingContractDate",
+    "ContractStatusChangeDate",
+]
+ 
+NUMERIC_COLUMNS = [
+    "ClosePrice",
+    "ListPrice",
+    "OriginalListPrice",
+    "LivingArea",
+    "LotSizeAcres",
+    "BedroomsTotal",
+    "BathroomsTotalInteger",
+    "DaysOnMarket",
+    "YearBuilt",
+    "Latitude",
+    "Longitude",
+    "rate_30yr_fixed",
+]
+ 
+# load datasets from Weeks 2-3 
+sold = pd.read_csv(folder / "sold_with_rates.csv", low_memory=False)
+listings = pd.read_csv(folder / "listings_with_rates.csv", low_memory=False)
+ 
+print(f"Sold rows loaded: {len(sold):,}")
+print(f"Listings rows loaded: {len(listings):,}")
+ 
+# Convert date fields to datetime 
+for col in DATE_COLUMNS:
+    if col in sold.columns:
+        before = sold[col].notna().sum()
+        sold[col] = pd.to_datetime(sold[col], errors="coerce")  
+        after = sold[col].notna().sum()
+        print(f"  {col}: {before:,} non-null before → {after:,} after")
+ 
+# Convert numeric fields to numeric types 
+for col in NUMERIC_COLUMNS:
+    if col in sold.columns:
+        before = sold[col].notna().sum()
+        sold[col] = pd.to_numeric(sold[col], errors="coerce")   
+        after = sold[col].notna().sum()
+        print(f"  {col}: {before:,} non-null before → {after:,} after")
+ 
+# Confirm data types after conversion 
+key_cols = ["CloseDate", "ClosePrice", "LivingArea", "DaysOnMarket", "Latitude", "Longitude"]
+for col in key_cols:
+    if col in sold.columns:
+        print(f"  {col}: {sold[col].dtype}")
+ 
+# Drop columns that are empty
+empty_cols = [col for col in sold.columns if sold[col].isna().all()]
+sold = sold.drop(columns=empty_cols)
+print(f"\nDropped {len(empty_cols)} empty columns: {empty_cols}")
+ 
+#Flag invalid numeric values
+sold["invalid_close_price_flag"] = sold["ClosePrice"] <= 0
+sold["invalid_living_area_flag"] = sold["LivingArea"] <= 0
+sold["invalid_days_on_market_flag"] = sold["DaysOnMarket"] < 0
+ 
+if "BedroomsTotal" in sold.columns:
+    sold["invalid_bedrooms_flag"] = sold["BedroomsTotal"] < 0
+ 
+if "BathroomsTotalInteger" in sold.columns:
+    sold["invalid_bathrooms_flag"] = sold["BathroomsTotalInteger"] < 0
+ 
+print(f"  invalid_close_price_flag:    {sold['invalid_close_price_flag'].sum():,} records")
+print(f"  invalid_living_area_flag:    {sold['invalid_living_area_flag'].sum():,} records")
+print(f"  invalid_days_on_market_flag: {sold['invalid_days_on_market_flag'].sum():,} records")
+ 
+if "ListingContractDate" in sold.columns and "CloseDate" in sold.columns:
+    sold["listing_after_close_flag"] = (
+        sold["ListingContractDate"].notna() &
+        sold["CloseDate"].notna() &
+        (sold["ListingContractDate"] > sold["CloseDate"])
+    )
+    print(f"  listing_after_close_flag:    {sold['listing_after_close_flag'].sum():,} records")
+ 
+if "PurchaseContractDate" in sold.columns and "CloseDate" in sold.columns:
+    sold["purchase_after_close_flag"] = (
+        sold["PurchaseContractDate"].notna() &
+        sold["CloseDate"].notna() &
+        (sold["PurchaseContractDate"] > sold["CloseDate"])
+    )
+    print(f"  purchase_after_close_flag:   {sold['purchase_after_close_flag'].sum():,} records")
+ 
+if "ListingContractDate" in sold.columns and "PurchaseContractDate" in sold.columns:
+    sold["negative_timeline_flag"] = (
+        sold["ListingContractDate"].notna() &
+        sold["PurchaseContractDate"].notna() &
+        (sold["ListingContractDate"] > sold["PurchaseContractDate"])
+    )
+    print(f"  negative_timeline_flag:      {sold['negative_timeline_flag'].sum():,} records")
+ 
+ 
+if "Latitude" in sold.columns and "Longitude" in sold.columns:
+    sold["missing_coords_flag"] = sold["Latitude"].isna() | sold["Longitude"].isna()
+    sold["zero_coords_flag"] = (sold["Latitude"] == 0) | (sold["Longitude"] == 0)
+    sold["positive_longitude_flag"] = sold["Longitude"] > 0
+    sold["implausible_coords_flag"] = (
+        sold["Latitude"].notna() & sold["Longitude"].notna() &
+        (
+            (sold["Latitude"] < 32) | (sold["Latitude"] > 42.5) |
+            (sold["Longitude"] < -125) | (sold["Longitude"] > -114)
+        )
+    )
+    print(f"  missing_coords_flag:         {sold['missing_coords_flag'].sum():,} records")
+    print(f"  zero_coords_flag:            {sold['zero_coords_flag'].sum():,} records")
+    print(f"  positive_longitude_flag:     {sold['positive_longitude_flag'].sum():,} records")
+    print(f"  implausible_coords_flag:     {sold['implausible_coords_flag'].sum():,} records")
+ 
+
+flag_cols = [col for col in sold.columns if col.endswith("_flag")]
+clean_mask = ~sold[flag_cols].any(axis=1)
+sold_clean = sold[clean_mask].copy()
+sold_clean.to_csv(folder / "sold_cleaned.csv", index=False)
+ 
+print(f"\n--- Row Count Summary ---")
+print(f"  Rows in original sold dataset: {len(sold):,}")
+print(f"  Rows in cleaned sold dataset:  {len(sold_clean):,}")
+print(f"  Rows removed by flags:         {len(sold) - len(sold_clean):,}")
+ 
