@@ -1,0 +1,111 @@
+import pandas as pd
+from pathlib import Path
+
+folder = Path(".")
+sold = pd.read_csv(folder / "sold_cleaned.csv", low_memory=False)
+
+# convert date to datetime 
+sold["CloseDate"] = pd.to_datetime(sold["CloseDate"], errors="coerce")
+sold["PurchaseContractDate"] = pd.to_datetime(sold["PurchaseContractDate"], errors="coerce")
+sold["ListingContractDate"] = pd.to_datetime(sold["ListingContractDate"], errors="coerce")
+
+# price ratio (Close Price / Original List Price)
+sold["price_ratio"] = sold["ClosePrice"] / sold["OriginalListPrice"]
+
+# price per sq foot: (Close Price / Living Area)
+sold["price_per_sqft"] = sold["ClosePrice"] / sold["LivingArea"]
+
+# close to original list ratio:
+sold["close_to_original_list_ratio"] = sold["ClosePrice"] / sold["OriginalListPrice"]
+
+print(f"Median price ratio:    {sold['price_ratio'].median():.3f}")
+print(f"Median price per sqft: ${sold['price_per_sqft'].median():,.0f}")
+
+#  Year, month, and YrMo from CloseDate for time-series analysis
+sold["close_year"] = sold["CloseDate"].dt.year
+sold["close_month"] = sold["CloseDate"].dt.month
+sold["close_yrmo"] = sold["CloseDate"].dt.to_period("M").astype(str)
+
+print(f"Date range: {sold['close_yrmo'].min()} to {sold['close_yrmo'].max()}")
+
+# listing to contract days 
+sold["listing_to_contract_days"] = (sold["PurchaseContractDate"] - sold["ListingContractDate"]).dt.days
+
+# contract to close days: 
+sold["contract_to_close_days"] = (sold["CloseDate"] - sold["PurchaseContractDate"]).dt.days
+
+print(f"Median listing to contract days: {sold['listing_to_contract_days'].median():.0f}")
+print(f"Median contract to close days:   {sold['contract_to_close_days'].median():.0f}")
+
+# Segment analysis by CountyOrParish
+
+county_summary = (
+    sold.groupby("CountyOrParish")
+    .agg(
+        median_close_price=("ClosePrice", "median"),
+        median_price_per_sqft=("price_per_sqft", "median"),
+        median_dom=("DaysOnMarket", "median"),
+        median_price_ratio=("price_ratio", "median"),
+        total_sales=("ClosePrice", "count")
+    )
+    .sort_values("median_close_price", ascending=False)
+    .reset_index()
+)
+print("\nTop 10 Counties by Median Close Price:")
+print(county_summary.head(10).to_string(index=False))
+
+# Segment analysis by property subtype 
+
+subtype_summary = (
+    sold.groupby("PropertySubType")
+    .agg(
+        median_close_price=("ClosePrice", "median"),
+        median_price_per_sqft=("price_per_sqft", "median"),
+        median_dom=("DaysOnMarket", "median"),
+        total_sales=("ClosePrice", "count")
+    )
+    .sort_values("total_sales", ascending=False)
+    .reset_index()
+)
+print("\nSegment Analysis by Property SubType:")
+print(subtype_summary.to_string(index=False))
+
+#  Segment analysis by listing office 
+
+listing_office_summary = (
+    sold.groupby("ListOfficeName")
+    .agg(
+        total_volume=("ClosePrice", "sum"),     
+        total_units=("ClosePrice", "count"),    
+        median_close_price=("ClosePrice", "median")
+    )
+    .sort_values("total_volume", ascending=False)
+    .reset_index()
+)
+print("\nTop 10 Listing Offices by Sales Volume:")
+print(listing_office_summary.head(10).to_string(index=False))
+
+# Segment analysis by buyer office
+
+buyer_office_summary = (
+    sold.groupby("BuyerOfficeName")
+    .agg(
+        total_volume=("ClosePrice", "sum"),     
+        total_units=("ClosePrice", "count"),    
+        median_close_price=("ClosePrice", "median")
+    )
+    .sort_values("total_volume", ascending=False)
+    .reset_index()
+)
+print("\nTop 10 Buyer Offices by Sales Volume:")
+print(buyer_office_summary.head(10).to_string(index=False))
+
+
+new_cols = [
+    "CloseDate", "ClosePrice", "price_ratio", "price_per_sqft",
+    "close_yrmo", "listing_to_contract_days", "contract_to_close_days"
+]
+print("\nSample output (first 5 rows of engineered columns):")
+print(sold[new_cols].head().to_string(index=False))
+
+sold.to_csv(folder / "sold_engineered.csv", index=False)
