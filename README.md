@@ -37,7 +37,13 @@ A 12-week data analytics pipeline focused on transforming raw real estate MLS tr
 - [x] Merge mortgage rates onto both combined datasets via a `year_month` key.
 - [x] Validate zero null rate values after merge.
 - [x] Save both enriched datasets as new CSVs.
-
+### ✅ Weeks 4–5: Data Cleaning and Preparation
+- [x] Converted `CloseDate`, `PurchaseContractDate`, `ListingContractDate`, `ContractStatusChangeDate` to datetime format.
+- [x] Converted all key numeric fields to proper numeric types.
+- [x] Removed invalid numeric values (`ClosePrice <= 0`, `LivingArea <= 0`, `DaysOnMarket < 0`).
+- [x] Created date consistency flags: 
+- [x] Created geographic data quality flag
+### ⬜ Week 6: Feature Engineering and Market Metrics
 
 ## Key Milestone Metrics
  
@@ -66,5 +72,17 @@ A 12-week data analytics pipeline focused on transforming raw real estate MLS tr
 | Min DaysOnMarket (data quality flag) | -288 days | 
 | Max LivingArea (data quality flag) | 17,021,321 sq ft | 
 
-
+### Weeks 4–5 – Data Cleaning Summary
+ 
+| Task | Result |
+| :--- | :--- |
+| Rows before cleaning | 458,336 |
+| Rows after cleaning | 457,788 |
+| Rows removed | 548 |
+| listing_after_close_flag | 66 records |
+| purchase_after_close_flag | 290 records |
+| negative_timeline_flag | 292 records |
+| missing_coords_flag | 16,024 records |
+| zero_coords_flag | 27 records |
+| wrong_longitude_flag | 33 records |
 ---
