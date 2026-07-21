@@ -24,6 +24,27 @@ NUMERIC_COLUMNS = [
     "Longitude",
     "rate_30yr_fixed",
 ]
+
+
+# columns flagged in Weeks 2-3 as >90% missing
+HIGH_MISSING_COLUMNS = [
+    "WaterfrontYN",
+    "BasementYN",
+    "FireplacesTotal",
+    "AboveGradeFinishedArea",
+    "TaxAnnualAmount",
+    "BuilderName",
+    "TaxYear",
+    "BuildingAreaTotal",
+    "ElementarySchoolDistrict",
+    "CoBuyerAgentFirstName",
+    "BelowGradeFinishedArea",
+    "BusinessType",
+    "CoveredSpaces",
+    "LotSizeDimensions",
+    "MiddleOrJuniorSchoolDistrict",
+]
+
  
 # load datasets from Weeks 2-3 
 sold = pd.read_csv(folder / "sold_with_rates.csv", low_memory=False)
@@ -58,6 +79,22 @@ for col in key_cols:
 empty_cols = [col for col in sold.columns if sold[col].isna().all()]
 sold = sold.drop(columns=empty_cols)
 print(f"\nDropped {len(empty_cols)} empty columns: {empty_cols}")
+
+
+# fill missing DaysOnMarket with median
+dom_median = sold["DaysOnMarket"].median()
+missing_dom = sold["DaysOnMarket"].isna().sum()
+sold["DaysOnMarket"] = sold["DaysOnMarket"].fillna(dom_median)
+print(f"  DaysOnMarket: filled {missing_dom:,} missing values with median ({dom_median:.0f})")
+
+# fill missing BedroomsTotal and BathroomsTotalInteger with median
+for col in ["BedroomsTotal", "BathroomsTotalInteger"]:
+    if col in sold.columns:
+        median_val = sold[col].median()
+        missing = sold[col].isna().sum()
+        sold[col] = sold[col].fillna(median_val)
+        print(f"  {col}: filled {missing:,} missing values with median ({median_val:.0f})")
+
  
 #Flag invalid numeric values
 sold["invalid_close_price_flag"] = sold["ClosePrice"] <= 0
@@ -98,7 +135,8 @@ if "ListingContractDate" in sold.columns and "PurchaseContractDate" in sold.colu
     )
     print(f"  negative_timeline_flag:      {sold['negative_timeline_flag'].sum():,} records")
  
- 
+
+#Geographic Quality
 if "Latitude" in sold.columns and "Longitude" in sold.columns:
     sold["missing_coords_flag"] = sold["Latitude"].isna() | sold["Longitude"].isna()
     sold["zero_coords_flag"] = (sold["Latitude"] == 0) | (sold["Longitude"] == 0)
